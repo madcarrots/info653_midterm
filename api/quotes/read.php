@@ -3,9 +3,6 @@
     header('Access-Controll-Allow-Origin: *');
     header('Content-type: application/json');
 
-    include_once '../../config/Database.php';
-    include_once '../../models/Quote.php';
-
     // instantiate database and connect
     $database = new Database();
     $db = $database->connect();
