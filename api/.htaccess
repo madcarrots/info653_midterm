@@ -1,0 +1,11 @@
+RewriteEngine On
+#use the below on real website
+# RewriteBase /api/
+
+# use the below when testing at home
+RewriteBase /midterm/api/
+
+# Route everything that is NOT a real file through our single front controller
+# (Directories like /authors/ and non-existent paths will be routed)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ index.php [QSA,L]
