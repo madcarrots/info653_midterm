@@ -2,6 +2,10 @@
     // headers
     header('Access-Controll-Allow-Origin: *');
     header('Content-type: application/json');
+    
+    // includes relative to file location
+    include_once(__DIR__ . '/../../config/Database.php');
+    include_once(__DIR__ . '/../../models/Quote.php');
 
     // instantiate database and connect
     $database = new Database();
@@ -10,8 +14,18 @@
     // Instantiate quote object
     $quote_obj = new Quote($db);
 
-    // Quote query
-    $result = $quote_obj->read();
+    // Get optional filters from query string 
+    $author_id   = isset($_GET['author_id']) && $_GET['author_id'] !== '' 
+                   ? (int)$_GET['author_id'] 
+                   : null;
+
+    $category_id = isset($_GET['category_id']) && $_GET['category_id'] !== '' 
+                   ? (int)$_GET['category_id'] 
+                   : null;
+
+    // Quote query 
+    $result = $quote_obj->read($author_id, $category_id);
+
     // get row count
     $num = $result->rowCount();
 
@@ -40,11 +54,9 @@
         // encode to JSON and output
         echo json_encode($quotes_arr);
     } else {
-        // no posts
+        // no quotes found 
         echo json_encode(
-            array('message' => 'No quotes found.')
+            array('message' => 'No Quotes Found')
         );
     }
-    
-
 ?>

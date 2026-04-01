@@ -1,8 +1,12 @@
 <?php
     // headers
-    header('Access-Controll-Allow-Origin: *');
+    header('Access-Control-Allow-Origin: *');
     header('Content-type: application/json');
 
+    // includes relative to file location
+    include_once(__DIR__ . '/../../config/Database.php');
+    include_once(__DIR__ . '/../../models/Category.php');
+    
     // instantiate database and connect
     $database = new Database();
     $db = $database->connect();
@@ -15,7 +19,7 @@
     // get row count
     $num = $result->rowCount();
 
-    // Check if there are any quotes
+    // Check if there are any categories
     if($num > 0) {
         // initialize array
         $categories_arr = array();
@@ -36,11 +40,9 @@
         // encode to JSON and output
         echo json_encode($categories_arr);
     } else {
-        // no categories?
+        // not found message
         echo json_encode(
-            array('message' => 'No categories found.')
+            array('message' => 'category_id Not Found')
         );
     }
-    
-
 ?>

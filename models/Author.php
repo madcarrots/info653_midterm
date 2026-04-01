@@ -1,6 +1,6 @@
 <?php
     class Author {
-        // database basics
+        // DB stuff
         private $conn;
         private $table = 'authors';
 
@@ -13,10 +13,10 @@
             $this->conn = $db;
         }  
 
-        // get authors
+        // get all authors
         public function read() {
             // create query
-            $query = 'Select
+            $query = 'SELECT
                 id, 
                 author 
             FROM ' . $this->table . ' 
@@ -32,15 +32,14 @@
         }
 
         // Get single author
-        public function read_single () {
+        public function read_single() {
             $query = 'SELECT
                 id,
                 author
-                FROM
-                ' . $this->table . // ' 
-                // WHERE EXISTS (SELECT 1 FROM  ' . $this->table . ' WHERE id = :id)
-                ' WHERE id = :id
-                ';
+              FROM ' . $this->table . '
+              WHERE id = :id
+              LIMIT 0,1';
+
             // prepare statement
             $stmt = $this->conn->prepare($query);
 
@@ -50,19 +49,74 @@
             // execute query
             $stmt->execute();
 
-
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-
-            // set properties
-            $this->id = $row['id'];
-            $this->author = $row['author'];
+            // set properties 
+            if ($row) {
+                $this->id     = $row['id'];
+                $this->author = $row['author'];
+            } else {
+                $this->id = null;   // so read_single.php knows it was not found
+            }
         }
 
-        // Delete Author
-        public function delete(){
-            // create author
-            $query  = 'DELETE FROM ' . $this->table . ' WHERE id = :id';
+        // Create author
+        public function create_author() {
+            $query = 'INSERT INTO ' . $this->table . ' 
+                      SET 
+                          author = :author';
+
+            // prepare statement
+            $stmt = $this->conn->prepare($query);
+
+            // clean data
+            $this->author = htmlspecialchars(strip_tags($this->author));
+            
+            // Bind data
+            $stmt->bindParam(':author', $this->author);
+
+            // execute query
+            if ($stmt->execute()) {
+                return true;
+            }
+
+            // Print error 
+            printf("Error: %s.\n", $stmt->error);
+            return false;
+        }
+
+        // Update author
+        public function update_author() {
+            $query = 'UPDATE ' . $this->table . ' 
+                      SET 
+                          author = :author
+                      WHERE id = :id';
+
+            // prepare statement
+            $stmt = $this->conn->prepare($query);
+
+            // clean data
+            $this->author = htmlspecialchars(strip_tags($this->author));
+            $this->id     = htmlspecialchars(strip_tags($this->id));
+
+            // Bind data
+            $stmt->bindParam(':author', $this->author);
+            $stmt->bindParam(':id',     $this->id);
+
+            // execute query
+            if ($stmt->execute()) {
+                return true;
+            }
+
+            // Print error 
+            printf("Error: %s.\n", $stmt->error);
+            return false;
+        }
+
+        // Delete author
+        public function delete() {
+            // create query
+            $query = 'DELETE FROM ' . $this->table . ' WHERE id = :id';
 
             // prepare statement
             $stmt = $this->conn->prepare($query);
@@ -74,87 +128,13 @@
             $stmt->bindParam(':id', $this->id);
 
             // execute query
-
-            if($stmt->execute()) {
-
-                $affected_rows = $stmt->rowCount();
-
-                if ($affected_rows > 0) {
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-            
-            // Print error if something is afoul
-            printf("ErrorLL %s.\n", $STMT->error);
-            return false;
-            
-        }
-
-        // create author
-        public function create_author () {
-
-            $query = 'INSERT IGNORE INTO ' . $this->table . ' 
-            SET 
-                author = :author
-            ';
-
-            // prepare statement
-            $stmt = $this->conn->prepare($query);
-
-            // clean data
-            $this->author = htmlspecialchars(strip_tags($this->author));
-            
-            // Bind data
-            $stmt->bindParam(':author', $this->author);
-
-
-            if($stmt->execute()) {
-
-                $affected_rows = $stmt->rowCount();
-
-                if ($affected_rows > 0) {
-                    return true;
-                } else {
-                    return false;
-                }
+            if ($stmt->execute()) {
+                return $stmt->rowCount() > 0;   // true only if a row was actually deleted
             }
 
-            // Print error if something is afoul
-            printf("ErrorLL %s.\n", $STMT->error);
+            // Print error 
+            printf("Error: %s.\n", $stmt->error);
             return false;
         }
-
-        public function update_author () {
-
-            $query = 'UPDATE ' . $this->table . ' 
-            SET 
-                author = :author
-            WHERE
-                id=:id
-            ';
-
-            // prepare statement
-            $stmt = $this->conn->prepare($query);
-
-            // clean data
-            $this->author = htmlspecialchars(strip_tags($this->author));
-            $this->id = htmlspecialchars(strip_tags($this->id));
-
-            // Bind data
-            $stmt->bindParam(':author', $this->author);
-            $stmt->bindParam(':id', $this->id);
-
-            // execute query
-            if($stmt->execute()) {
-                return true;
-            }
-
-            // Print error if something is afoul
-            printf("ErrorLL %s.\n", $STMT->error);
-            return false;
-        }
-
-
-}
+    }
+?>

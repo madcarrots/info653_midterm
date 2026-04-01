@@ -1,32 +1,31 @@
 <?php
-// ======================================================
-//  SINGLE API FRONT CONTROLLER (works with /midterm/api/)
-// ======================================================
+// CORS taken from class
 
-// Common CORS + JSON headers
-header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+header('Access-Control-Allow-Origin: *');
+
+  header('Content-Type: application/json');
+
+  $method = $_SERVER['REQUEST_METHOD'];
 
 
-include_once '../config/Database.php';
-include_once '../models/Quote.php';
-include_once '../models/Category.php';
-include_once '../models/Author.php';
+  if ($method === 'OPTIONS') {
 
-// Handle CORS preflight
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 
-// Parse the requested path (handles /midterm/api/quotes/ etc.)
+    header('Access-Control-Allow-Headers: Origin, Accept, Content-Type, X-Requested-With');
+
+    exit();
+
+  }
+
+
+
+// Parse the URL (handles http://localhost/midterm/api/quotes/?author_id=10 etc.)
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = trim($uri, '/');
 $parts = explode('/', $uri);
 
-// Skip any leading folder like "midterm" so we always find "api"
+// Skip "midterm" and "api" segments so we get clean resource + optional id
 if (isset($parts[0]) && strtolower($parts[0]) === 'midterm') {
     array_shift($parts);
 }
@@ -34,10 +33,10 @@ if (isset($parts[0]) && strtolower($parts[0]) === 'api') {
     array_shift($parts);
 }
 
-$resource     = $parts[0] ?? null;      // "quotes", "authors", etc.
+$resource     = $parts[0] ?? null;      // authors, categories, quotes
 $id_from_path = $parts[1] ?? null;      // e.g. 5 from /quotes/5
 
-// Support BOTH /quotes/?id=5 and /quotes/5
+// Support BOTH clean path style (/quotes/5) and query string (?id=5)
 $id = $id_from_path ?? ($_GET['id'] ?? null);
 
 $allowed_resources = ['authors', 'categories', 'quotes'];
@@ -50,7 +49,7 @@ if (!$resource || !in_array($resource, $allowed_resources)) {
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Path to your original operation files
+// Folder that contains action files (create.php, read.php, etc.)
 $base_path = __DIR__ . "/{$resource}/";
 
 switch ($method) {
@@ -63,15 +62,18 @@ switch ($method) {
         break;
 
     case 'POST':
+        // /quotes/, /authors/, /categories/ -> create.php
         include $base_path . 'create.php';
         break;
 
     case 'PUT':
     case 'PATCH':
+        // /quotes/?id=..., /authors/?id=..., etc. -> update.php
         include $base_path . 'update.php';
         break;
 
     case 'DELETE':
+        // /quotes/?id=..., /authors/?id=..., etc. -> delete.php
         include $base_path . 'delete.php';
         break;
 
@@ -80,3 +82,6 @@ switch ($method) {
         echo json_encode(['message' => 'Method Not Allowed']);
         break;
 }
+
+
+?>

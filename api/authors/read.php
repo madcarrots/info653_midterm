@@ -1,8 +1,12 @@
 <?php
     // headers
-    header('Access-Controll-Allow-Origin: *');
+    header('Access-Control-Allow-Origin: *');
     header('Content-type: application/json');
 
+    // includes relative to file location
+    include_once(__DIR__ . '/../../config/Database.php');
+    include_once(__DIR__ . '/../../models/Author.php');
+    
     // instantiate database and connect
     $database = new Database();
     $db = $database->connect();
@@ -15,7 +19,7 @@
     // get row count
     $num = $result->rowCount();
 
-    // Check if there are any quotes
+    // Check if there are any authors
     if($num > 0) {
         // initialize array
         $authors_arr = array();
@@ -36,11 +40,9 @@
         // encode to JSON and output
         echo json_encode($authors_arr);
     } else {
-        // no authors?
+        // not found
         echo json_encode(
-            array('message' => 'No authors found.')
+            array('message' => 'author_id Not Found')
         );
     }
-    
-
 ?>
